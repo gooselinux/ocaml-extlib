@@ -1,0 +1,25 @@
+--- extlib-1.5.1.orig/install.ml	2008-02-12 18:01:34.000000000 +0000
++++ extlib-1.5.1/install.ml	2008-02-12 18:03:26.000000000 +0000
+@@ -64,10 +64,18 @@
+ 		print_endline ("Installing " ^ file);
+ 		let path = dest ^ file in
+ 		(try Sys.remove path with _ -> ());
+-		try
+-			Sys.rename file path;
+-		with
+-			_ -> failwith "Aborted"
++		let ichan = open_in file in
++		let ochan = open_out path in
++		let buf = String.create 1024 in
++		let rec loop () =
++			let len = input ichan buf 0 1024 in
++			if len > 0 then (
++				output ochan buf 0 len;
++				loop ()
++			)
++		in
++		loop ();
++		Sys.remove file
+ 	end
+ 
+ let complete_path p =
